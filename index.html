@@ -14,17 +14,52 @@
 				{{errors}}
 			</div>
 
-			<label>name:</label>
-			<input v-model="name" type="text" />
-			
+			<label>First Name:</label>
+			<input v-model="f_name" type="text" required/>
+
+			<label>Last Name:</label>
+			<input v-model="l_name" type="text" required/>
+
+			<label>Email Address:</label>
+			<input v-model="email" type="email" required/>
+
+			<label>Make:</label>
+			<select v-model="make_choice" v-on:change="changeModels">
+				<option disabled>Choose Make</option>
+				<option v-for="item in make_opts" v-bind:value="item">
+					{{ item }}
+				</option>
+			</select>
+
+		<!-- only show model when make chosen -->
+		<div v-if="make_choice != 'Choose Make'">
+			<label>Model:</label>
+			<select v-model="model_choice">
+				<option disabled>Choose Model</option>
+			  <option v-for="item in model_opts" v-bind:value="item">
+			    {{ item }}
+			  </option>
+			</select>
+		</div><!--close v-if -->
+
+
 			<br />
 			<button type="submit">Submit</button>
 		</form>
 
 		<div v-else>
 			<h1>Submitted with great success!</h1>
+			<span>First Name: {{ f_name }}</span>
+			<br />
+			<span>Last Name: {{ l_name }}</span>
+			<br />
+			<span>Email: {{ email }}</span>
+			<br />
+			<span>Make: {{ make_choice }}</span>
+			<br />
+			<span>Model: {{ model_choice }}</span>
 		</div>
-	</div>
+	</div><!--close id app -->
 
 	<script src="https://unpkg.com/vue"></script>
 	<script>
@@ -35,23 +70,64 @@
 			'Subaru': ['brz', 'outback', 'legacy']
 		};
 
+		var makes = Object.keys(makesAndModels);
+
 		var app = new Vue({
 			el: '#app',
 			data() {
 				return {
 					submitted: false,
 					errors: '',
-					name: '',
+					f_name: '',
+					l_name: '',
+					email: '',
+					make_opts: makes,
+					make_choice: 'Choose Make',
+					model_opts: '',
+					model_choice:'Choose Model'
 				};
 			},
 			methods: {
+				//change the model. Dependent on the make choice.
+				changeModels(){
+					this.model_opts = makesAndModels[this.make_choice];
+					this.model_choice = 'Choose Model';
+				},
+				//on submission validate all inputs.
 				onSubmit() {
 					this.errors = '';
+					//regex values for validation
+					var name_regex = /^(([A-Za-z]+[\-\']?)*([A-Za-z]+)?)+([A-Za-z]+[\-\']?)*([A-Za-z]+)?$/;
+					var email_regex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$/;
 
-					if (!this.name) {
-						this.errors += 'name required';
+					if (!this.f_name) {
+						this.errors += 'First name required. ';
+					}
+					else if(!this.l_name){
+						this.errors += 'Last name required. ';
+					}
+					//validate name
+					else if(!this.f_name.trim().match(name_regex) || !this.l_name.trim().match(name_regex)){
+						this.errors += 'Name can only contain letters. (No numbers, spaces or special characters!)';
+						console.log(this.l_name);
+					}
+					else if(!this.email){
+						this.errors += 'Email required. ';
+					}
+					//validate email in the case that HTML5 doesnt catch it.
+					else if(!this.email.trim().match(email_regex)){
+						this.errors += 'Please enter a valid email! ';
+					}
+					else if(!this.make_choice || this.make_choice == 'Choose Make'){
+						this.errors += 'Please choose a vehicle make. ';
+					}
+					else if(!this.model_choice || this.model_choice == 'Choose Model'){
+						this.errors += 'Please choose a vehicle model. ';
 					}
 
+
+
+					//if no errors submit.
 					if (!this.errors) {
 						this.submitted = true;
 					}
